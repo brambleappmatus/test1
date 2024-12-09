@@ -33,6 +33,49 @@ export async function deleteArchivedWorkout(id: string): Promise<void> {
   }
 }
 
+export async function updateArchivedWorkout(
+  id: string,
+  data: {
+    name: string;
+    date: string;
+    exercises: {
+      id: string;
+      exercise_id: string;
+      sets: number;
+      reps: number;
+      weight: number;
+    }[];
+  }
+): Promise<void> {
+  const { error: workoutError } = await supabase
+    .from('archived_workouts')
+    .update({ 
+      name: data.name,
+      date: data.date
+    })
+    .eq('id', id);
+
+  if (workoutError) {
+    throw new Error('Failed to update workout');
+  }
+
+  // Update each exercise
+  for (const exercise of data.exercises) {
+    const { error: exerciseError } = await supabase
+      .from('workout_exercises')
+      .update({
+        sets: exercise.sets,
+        reps: exercise.reps,
+        weight: exercise.weight
+      })
+      .eq('id', exercise.id);
+
+    if (exerciseError) {
+      throw new Error('Failed to update exercise');
+    }
+  }
+}
+
 export async function finishWorkout(
   workout: Workout,
   exercises: WorkoutExercise[],

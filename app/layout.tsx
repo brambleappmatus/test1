@@ -5,6 +5,8 @@ import Sidebar from './components/Sidebar';
 import MobileNav from './components/MobileNav';
 import FloatingThemeToggle from './components/FloatingThemeToggle';
 import { ThemeProvider } from './providers/ThemeProvider';
+import { WorkoutProvider } from './providers/WorkoutProvider';
+import UnsavedWorkoutBar from './components/UnsavedWorkoutBar';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,18 +25,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+      </head>
       <body className={`${inter.className} bg-gray-50 dark:bg-black text-gray-900 dark:text-white antialiased`}>
         <ThemeProvider>
-          <FloatingThemeToggle />
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 transition-all duration-300 ease-in-out">
-              <div className="container mx-auto px-4 py-8 lg:px-8 lg:py-10 mb-20 lg:mb-0">
-                {children}
-              </div>
-            </main>
-            <MobileNav />
-          </div>
+          <WorkoutProvider>
+            <FloatingThemeToggle />
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <main className="flex-1 transition-all duration-300 ease-in-out">
+                <div className="container mx-auto px-4 py-8 lg:px-8 lg:py-10 mb-20 lg:mb-0">
+                  {children}
+                </div>
+              </main>
+              <MobileNav />
+            </div>
+            <UnsavedWorkoutBar />
+          </WorkoutProvider>
         </ThemeProvider>
       </body>
     </html>

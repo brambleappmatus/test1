@@ -15,13 +15,6 @@ import { format } from 'date-fns';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import type { Exercise, Workout } from '@/app/types/database';
 
-interface WorkoutExerciseProgressProps {
-  data: any[];
-  exercises: Exercise[];
-  workouts: Workout[];
-  workoutExercises: Record<string, string[]>;
-}
-
 const COLORS = [
   '#10b981', // Emerald
   '#3b82f6', // Blue
@@ -34,6 +27,13 @@ const COLORS = [
   '#a855f7', // Purple
   '#f43f5e', // Rose
 ];
+
+interface WorkoutExerciseProgressProps {
+  data: any[];
+  exercises: Exercise[];
+  workouts: Workout[];
+  workoutExercises: Record<string, string[]>;
+}
 
 export default function WorkoutExerciseProgress({ 
   data, 
@@ -48,10 +48,10 @@ export default function WorkoutExerciseProgress({
   const getExerciseColor = (index: number) => COLORS[index % COLORS.length];
 
   return (
-    <div className="bg-white dark:bg-black rounded-lg border border-gray-100 dark:border-gray-900 p-6">
+    <div className="bg-white dark:bg-black rounded-lg border border-gray-100 dark:border-gray-900">
       <div className="flex flex-col gap-6">
-        <div>
-          <h3 className="text-base font-medium text-gray-900 dark:text-white">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Workout Progress
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -59,7 +59,7 @@ export default function WorkoutExerciseProgress({
           </p>
         </div>
 
-        <div className="h-[300px]">
+        <div className="h-[300px] px-6">
           {selectedWorkout ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data}>
@@ -73,15 +73,11 @@ export default function WorkoutExerciseProgress({
                   tickFormatter={(value) => format(new Date(value), 'MMM d')}
                   stroke={theme === 'dark' ? '#6b7280' : '#9ca3af'}
                   fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
                 />
                 <YAxis
                   stroke={theme === 'dark' ? '#6b7280' : '#9ca3af'}
                   tickFormatter={(value) => `${value}kg`}
                   fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
                 />
                 <Tooltip
                   contentStyle={{
@@ -92,6 +88,7 @@ export default function WorkoutExerciseProgress({
                   }}
                   labelFormatter={(value) => format(new Date(value), 'PPP')}
                 />
+                <Legend />
                 {selectedExercises.map((exerciseId, index) => {
                   const exercise = exercises.find(e => e.id === exerciseId);
                   if (!exercise) return null;
@@ -110,7 +107,6 @@ export default function WorkoutExerciseProgress({
                     />
                   );
                 })}
-                <Legend />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -120,22 +116,24 @@ export default function WorkoutExerciseProgress({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {workouts.map((workout) => (
-            <button
-              key={workout.id}
-              onClick={() => setSelectedWorkout(workout.id === selectedWorkout ? null : workout.id)}
-              className={`
-                px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                ${workout.id === selectedWorkout
-                  ? 'bg-emerald-600 text-white dark:text-black'
-                  : 'bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900'
-                }
-              `}
-            >
-              {workout.name}
-            </button>
-          ))}
+        <div className="p-6 border-t border-gray-100 dark:border-gray-900">
+          <div className="flex flex-wrap gap-2">
+            {workouts.map((workout) => (
+              <button
+                key={workout.id}
+                onClick={() => setSelectedWorkout(workout.id === selectedWorkout ? null : workout.id)}
+                className={`
+                  px-3 py-1.5 rounded-full text-sm font-medium transition-all
+                  ${workout.id === selectedWorkout
+                    ? 'bg-emerald-600 text-white dark:text-black'
+                    : 'bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900'
+                  }
+                `}
+              >
+                {workout.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

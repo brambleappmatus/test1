@@ -20,6 +20,7 @@ export default function NewWorkoutModal({ exercises, onSuccess, onCancel }: NewW
   const [availableExercises, setAvailableExercises] = useState(exercises);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleExerciseSelect = (exerciseId: string) => {
     const exercise = availableExercises.find(e => e.id === exerciseId);
@@ -77,47 +78,55 @@ export default function NewWorkoutModal({ exercises, onSuccess, onCancel }: NewW
     }
   };
 
+  const filteredExercises = availableExercises.filter(exercise =>
+    exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-black rounded-lg w-full max-w-2xl shadow-xl">
-        <form onSubmit={handleSubmit} className="divide-y divide-gray-100 dark:divide-gray-900">
-          <div className="px-6 py-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Create New Workout</h2>
-              <button
-                type="button"
-                onClick={onCancel}
-                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+      <div className="bg-white dark:bg-black rounded-xl p-6 w-full max-w-2xl shadow-xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Create New Workout</h2>
+          <button
+            onClick={onCancel}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Workout Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+              required
+            />
           </div>
 
-          <div className="px-6 py-4">
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Workout Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-black border border-gray-100 dark:border-gray-900 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-colors"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="px-6 py-4">
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Exercises</h3>
-                <div className="border border-gray-100 dark:border-gray-900 rounded-lg p-2 h-[300px] overflow-y-auto">
-                  {availableExercises.map((exercise) => (
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Exercises</h3>
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+                <div className="p-2 border-b border-gray-200 dark:border-gray-800">
+                  <input
+                    type="text"
+                    placeholder="Search exercises..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-md text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="p-2 h-[calc(24rem-44px)] overflow-y-auto">
+                  {filteredExercises.map((exercise) => (
                     <button
                       key={exercise.id}
                       type="button"
@@ -130,55 +139,58 @@ export default function NewWorkoutModal({ exercises, onSuccess, onCancel }: NewW
                       </svg>
                     </button>
                   ))}
+                  {filteredExercises.length === 0 && (
+                    <div className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
+                      No exercises found
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selected Exercises</h3>
-                <div className="border border-gray-100 dark:border-gray-900 rounded-lg p-2 h-[300px] overflow-y-auto">
-                  <DndContext
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selected Exercises</h3>
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 h-96 overflow-y-auto">
+                <DndContext
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={selectedExercises}
+                    strategy={verticalListSortingStrategy}
                   >
-                    <SortableContext
-                      items={selectedExercises}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {selectedExercises.map((exercise) => (
-                        <SortableExercise
-                          key={exercise.id}
-                          id={exercise.id}
-                          exercise={exercise}
-                          onRemove={() => handleExerciseRemove(exercise.id)}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                </div>
+                    {selectedExercises.map((exercise) => (
+                      <SortableExercise
+                        key={exercise.id}
+                        id={exercise.id}
+                        exercise={exercise}
+                        onRemove={() => handleExerciseRemove(exercise.id)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="px-6 py-4">
-              <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-                {error}
-              </div>
+            <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+              {error}
             </div>
           )}
 
-          <div className="px-6 py-4 flex justify-end gap-3">
+          <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || selectedExercises.length === 0}
-              className="px-3 py-1.5 text-sm font-medium text-white dark:text-black bg-black dark:bg-white rounded-lg hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white dark:text-black bg-black dark:bg-white rounded-lg hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
               {loading ? 'Creating...' : 'Create Workout'}
             </button>

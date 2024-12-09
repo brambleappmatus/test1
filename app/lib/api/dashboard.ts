@@ -14,8 +14,16 @@ export async function getDashboardStats(timeFrame: string, startDate: Date, endD
 
   if (exercisesError) throw new Error('Failed to fetch exercises');
 
-  // Get workouts within the time frame
+  // Get all workouts
   const { data: workouts, error: workoutsError } = await supabase
+    .from('workouts')
+    .select('*')
+    .order('name');
+
+  if (workoutsError) throw new Error('Failed to fetch workouts');
+
+  // Get workouts within the time frame
+  const { data: archivedWorkouts, error: workoutsDataError } = await supabase
     .from('archived_workouts')
     .select(`
       *,
@@ -28,10 +36,10 @@ export async function getDashboardStats(timeFrame: string, startDate: Date, endD
     .lte('date', end)
     .order('date', { ascending: true });
 
-  if (workoutsError) throw new Error('Failed to fetch workout data');
+  if (workoutsDataError) throw new Error('Failed to fetch workout data');
 
   // If no data found for the selected range, get the nearest available data point
-  if (!workouts || workouts.length === 0) {
+  if (!archivedWorkouts || archivedWorkouts.length === 0) {
     const { data: nearestWorkout, error: nearestError } = await supabase
       .from('archived_workouts')
       .select(`
@@ -54,17 +62,17 @@ export async function getDashboardStats(timeFrame: string, startDate: Date, endD
     }
   }
 
-  // Calculate stats for the current period
-  const totalWorkouts = workouts?.length || 0;
-  const totalWeight = workouts?.reduce((sum, workout) => 
+  // Calculate stats
+  const totalWorkouts = archivedWorkouts?.length || 0;
+  const totalWeight = archivedWorkouts?.reduce((sum, workout) => 
     sum + workout.workout_exercises.reduce((exerciseSum, exercise) => 
       exerciseSum + (exercise.weight * exercise.sets * exercise.reps), 0
     ), 0
   ) || 0;
-  const avgScore = workouts?.reduce((sum, workout) => sum + (workout.score || 0), 0) / totalWorkouts || 0;
+  const avgScore = archivedWorkouts?.reduce((sum, workout) => sum + (workout.score || 0), 0) / totalWorkouts || 0;
 
   // Process workout data for the performance chart - aggregate by day
-  const performanceByDay = workouts?.reduce((acc: { [key: string]: number }, workout) => {
+  const performanceByDay = archivedWorkouts?.reduce((acc: { [key: string]: number }, workout) => {
     const date = workout.date.split('T')[0];
     const workoutWeight = workout.workout_exercises.reduce((sum, exercise) => 
       sum + (exercise.weight * exercise.sets * exercise.reps), 0
@@ -85,7 +93,7 @@ export async function getDashboardStats(timeFrame: string, startDate: Date, endD
   })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // Process exercise-specific data for the progress chart - aggregate by day
-  const exerciseProgressByDay = workouts?.reduce((acc: { [key: string]: { [key: string]: number } }, workout) => {
+  const exerciseProgressByDay = archivedWorkouts?.reduce((acc: { [key: string]: { [key: string]: number } }, workout) => {
     const date = workout.date.split('T')[0];
     
     if (!acc[date]) {
@@ -110,7 +118,7 @@ export async function getDashboardStats(timeFrame: string, startDate: Date, endD
   })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // Calculate personal bests
-  const personalBests = workouts?.reduce((bests: any[], workout) => {
+  const personalBests = archivedWorkouts?.reduce((bests: any[], workout) => {
     workout.workout_exercises.forEach(exercise => {
       if (!exercise.exercise) return;
 
@@ -152,7 +160,7 @@ export async function getDashboardStats(timeFrame: string, startDate: Date, endD
   }, []) || [];
 
   // Get recent activity
-  const recentActivity = workouts?.slice(0, 5).map(workout => ({
+  const recentActivity = archivedWorkouts?.slice(0, 5).map(workout => ({
     id: workout.id,
     name: workout.name,
     date: workout.date,
@@ -166,6 +174,7 @@ export async function getDashboardStats(timeFrame: string, startDate: Date, endD
     performanceData,
     exerciseProgressData,
     exercises,
+    workouts,
     recentActivity,
     personalBests
   };

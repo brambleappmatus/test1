@@ -6,13 +6,16 @@ import CompactMetrics from './components/dashboard/CompactMetrics';
 import CompactMetricsMobile from './components/dashboard/CompactMetricsMobile';
 import CompactDateRange from './components/dashboard/CompactDateRange';
 import PerformanceChart from './components/dashboard/PerformanceChart';
-import ExerciseProgressChart from './components/dashboard/ExerciseProgressChart';
+import ExercisePerformanceChart from './components/dashboard/ExercisePerformanceChart';
+import WorkoutExerciseProgress from './components/dashboard/WorkoutExerciseProgress';
 import PersonalBests from './components/dashboard/PersonalBests';
 import RecentActivity from './components/dashboard/RecentActivity';
 import TimeFrameSelector from './components/dashboard/TimeFrameSelector';
 import { getDashboardStats } from './lib/api/dashboard';
 import { useDateRange } from './hooks/useDateRange';
 import { DumbbellIcon, ChartBarIcon, StarIcon } from './components/icons';
+import { getWorkouts } from './lib/api/workouts';
+import { getWorkoutExercises } from './lib/api/workout-exercises';
 
 export default function Home() {
   const { dateRange, updateDateRange } = useDateRange();
@@ -21,6 +24,7 @@ export default function Home() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedPbExercises, setSelectedPbExercises] = useState<string[]>([]);
+  const [workoutExercises, setWorkoutExercises] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -33,6 +37,17 @@ export default function Home() {
         );
         setDashboardData(data);
         setError(null);
+
+        // Fetch workout exercises
+        const workouts = await getWorkouts();
+        const exercisesByWorkout: Record<string, string[]> = {};
+        
+        await Promise.all(workouts.map(async (workout) => {
+          const exercises = await getWorkoutExercises(workout.id);
+          exercisesByWorkout[workout.id] = exercises.map(e => e.exercise_id);
+        }));
+
+        setWorkoutExercises(exercisesByWorkout);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
       } finally {
@@ -117,9 +132,16 @@ export default function Home() {
             </div>
           </div>
 
-          <ExerciseProgressChart
+          <ExercisePerformanceChart
             data={dashboardData?.exerciseProgressData || []}
             exercises={dashboardData?.exercises || []}
+          />
+
+          <WorkoutExerciseProgress
+            data={dashboardData?.exerciseProgressData || []}
+            exercises={dashboardData?.exercises || []}
+            workouts={dashboardData?.workouts || []}
+            workoutExercises={workoutExercises}
           />
 
           <PersonalBests 

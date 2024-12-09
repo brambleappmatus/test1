@@ -8,7 +8,7 @@ export default function FloatingThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="lg:hidden fixed top-4 right-4 z-50 p-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-md shadow-sm"
+      className="lg:hidden fixed top-4 right-4 z-50 w-10 h-10 flex items-center justify-center bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm"
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? (

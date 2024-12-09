@@ -25,7 +25,7 @@ export default function MobileNav() {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-100 dark:border-gray-900 pb-safe-area z-50">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-100 dark:border-gray-900 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-40">
       <div className="flex items-center justify-around h-16 px-2">
         {itemsWithLog.map((item) => (
           <Link

@@ -13,10 +13,29 @@
   --background: var(--dark-background);
 }
 
+/* Add safe area insets support */
 body {
   color: rgb(var(--foreground-rgb));
   background: var(--background);
   transition: background-color 0.3s ease-in-out;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Fix iOS 100vh issue */
+html {
+  height: -webkit-fill-available;
+}
+
+/* iOS status bar background */
+@supports (-webkit-touch-callout: none) {
+  .fixed {
+    padding-top: env(safe-area-inset-top);
+  }
 }
 
 /* Date Picker Custom Styles */

@@ -28,11 +28,16 @@ export default function SortableExercise({ id, exercise, onRemove }: SortableExe
     touchAction: 'none' // Prevent touch scrolling while dragging
   };
 
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent drag handler from firing
+    onRemove();
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex justify-between items-center p-3 bg-white border rounded-lg mb-2 group hover:border-gray-300 text-gray-900"
+      className="flex justify-between items-center p-3 bg-white dark:bg-black border border-gray-100 dark:border-gray-900 rounded-lg mb-2 group hover:border-gray-300 dark:hover:border-gray-700 text-gray-900 dark:text-white transition-all"
     >
       <div className="flex items-center gap-2">
         <button
@@ -54,11 +59,8 @@ export default function SortableExercise({ id, exercise, onRemove }: SortableExe
       </div>
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
-        className="text-gray-400 hover:text-red-500 transition-colors"
+        onClick={handleRemove}
+        className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
         title="Remove exercise"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

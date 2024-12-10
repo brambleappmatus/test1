@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { getWorkouts } from '../lib/api/workouts';
 import { getWorkoutExercises } from '../lib/api/workout-exercises';
 import { finishWorkout } from '../lib/api/workout-history';
-import type { Workout, WorkoutExercise } from '../types/database';
+import { getExercises } from '../lib/api/exercises';
+import type { Workout, WorkoutExercise, Exercise } from '../types/database';
 import WorkoutSelector from '../components/WorkoutSelector';
 import ExerciseLogger from '../components/ExerciseLogger';
+import ExerciseSelector from '../components/ExerciseSelector';
 import FinishWorkoutDialog from '../components/FinishWorkoutDialog';
 import { useWorkout } from '../providers/WorkoutProvider';
 
@@ -17,16 +19,22 @@ export default function LogWorkoutPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(activeWorkout?.workout || null);
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
+  const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [currentExercises, setCurrentExercises] = useState<WorkoutExercise[]>(activeWorkout?.exercises || []);
 
   useEffect(() => {
     async function fetchWorkouts() {
       try {
-        const data = await getWorkouts();
-        setWorkouts(data);
+        const [workoutsData, exercisesData] = await Promise.all([
+          getWorkouts(),
+          getExercises()
+        ]);
+        setWorkouts(workoutsData);
+        setAvailableExercises(exercisesData);
       } catch (err) {
         setError('Failed to fetch workouts');
       } finally {
@@ -78,6 +86,28 @@ export default function LogWorkoutPage() {
     }
   };
 
+  const handleAddExercise = (exerciseId: string) => {
+    const exercise = availableExercises.find(e => e.id === exerciseId);
+    if (!exercise) return;
+
+    const newExercise: WorkoutExercise = {
+      id: `temp-${Date.now()}`, // Temporary ID for the session
+      exercise_id: exercise.id,
+      sets: exercise.default_sets,
+      reps: exercise.default_reps,
+      weight: exercise.default_weight,
+      created_at: new Date().toISOString(),
+      exercise: exercise
+    };
+
+    setCurrentExercises(prev => [...prev, newExercise]);
+    setShowExerciseSelector(false);
+  };
+
+  const handleDeleteExercise = (exerciseId: string) => {
+    setCurrentExercises(prev => prev.filter(e => e.id !== exerciseId));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -87,73 +117,96 @@ export default function LogWorkoutPage() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-3xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Log Workout</h1>
-          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Track your progress and record your achievements
-          </p>
-        </div>
-        {selectedWorkout && workoutExercises.length > 0 && (
-          <button
-            onClick={() => setShowFinishDialog(true)}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 rounded-md bg-black dark:bg-white text-white dark:text-black font-medium shadow-sm hover:bg-black/90 dark:hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 dark:focus:ring-offset-black transition-colors"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Finish Workout
-          </button>
-        )}
-      </div>
-
-      <div className="bg-white dark:bg-black rounded-md shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <div className="p-4 sm:p-6">
-          <div className="mb-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">Select Workout</h2>
-            <WorkoutSelector
-              workouts={workouts}
-              selectedWorkout={selectedWorkout}
-              onSelect={setSelectedWorkout}
-            />
+    <>
+      <div className="space-y-6 sm:space-y-8 max-w-3xl mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Log Workout</h1>
+            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Track your progress and record your achievements
+            </p>
           </div>
+          {selectedWorkout && currentExercises.length > 0 && (
+            <button
+              onClick={() => setShowFinishDialog(true)}
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 rounded-md bg-black dark:bg-white text-white dark:text-black font-medium shadow-sm hover:bg-black/90 dark:hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 dark:focus:ring-offset-black transition-colors"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Finish Workout
+            </button>
+          )}
+        </div>
 
-          {selectedWorkout ? (
-            <div className="mt-6 sm:mt-8">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">Exercise Progress</h2>
-              <ExerciseLogger
-                workoutExercises={workoutExercises}
-                onError={setError}
-                onExerciseUpdate={setCurrentExercises}
+        <div className="bg-white dark:bg-black rounded-md shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div className="p-4 sm:p-6">
+            <div className="mb-6">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">Select Workout</h2>
+              <WorkoutSelector
+                workouts={workouts}
+                selectedWorkout={selectedWorkout}
+                onSelect={setSelectedWorkout}
               />
             </div>
-          ) : (
-            <div className="text-center py-8 sm:py-12">
-              <svg className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No workout selected</h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Choose a workout to start logging your progress.</p>
-            </div>
-          )}
 
-          {error && (
-            <div className="mt-4 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm flex items-start">
-              <svg className="h-5 w-5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              {error}
-            </div>
-          )}
+            {selectedWorkout ? (
+              <div className="mt-6 sm:mt-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Exercise Progress</h2>
+                  <button
+                    onClick={() => setShowExerciseSelector(true)}
+                    className="px-3 py-1.5 text-sm font-medium text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-lg transition-colors inline-flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Exercise
+                  </button>
+                </div>
+                <ExerciseLogger
+                  workoutExercises={currentExercises}
+                  onError={setError}
+                  onExerciseUpdate={setCurrentExercises}
+                  onDeleteExercise={handleDeleteExercise}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8 sm:py-12">
+                <svg className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No workout selected</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Choose a workout to start logging your progress.</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="mt-4 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm flex items-start">
+                <svg className="h-5 w-5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
+            )}
+          </div>
         </div>
+
+        <FinishWorkoutDialog
+          isOpen={showFinishDialog}
+          onConfirm={handleFinishWorkout}
+          onCancel={() => setShowFinishDialog(false)}
+        />
       </div>
 
-      <FinishWorkoutDialog
-        isOpen={showFinishDialog}
-        onConfirm={handleFinishWorkout}
-        onCancel={() => setShowFinishDialog(false)}
-      />
-    </div>
+      {showExerciseSelector && (
+        <ExerciseSelector
+          isOpen={showExerciseSelector}
+          exercises={availableExercises}
+          onSelect={handleAddExercise}
+          onClose={() => setShowExerciseSelector(false)}
+        />
+      )}
+    </>
   );
 }

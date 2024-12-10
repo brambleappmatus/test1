@@ -67,24 +67,36 @@ export default function EditWorkoutModal({ workout, onSuccess, onCancel }: EditW
   };
 
   const handleExerciseRemove = async (workoutExerciseId: string) => {
+    // First update UI state immediately
     const workoutExercise = workoutExercises.find(we => we.id === workoutExerciseId);
     if (!workoutExercise?.exercise) return;
 
+    // Update UI state first for immediate feedback
+    setWorkoutExercises(prev => prev.filter(we => we.id !== workoutExerciseId));
+    setAvailableExercises(prev => 
+      [...prev, workoutExercise.exercise].sort((a, b) => 
+        a.name.localeCompare(b.name)
+      )
+    );
+
     try {
+      // Then perform the API call
       await removeExerciseFromWorkout(workoutExerciseId);
-      setWorkoutExercises(prev => prev.filter(we => we.id !== workoutExerciseId));
-      setAvailableExercises(prev => [...prev, workoutExercise.exercise].sort((a, b) => a.name.localeCompare(b.name)));
     } catch (err) {
+      // Revert UI state if API call fails
+      setWorkoutExercises(prev => [...prev, workoutExercise]);
+      setAvailableExercises(prev => prev.filter(e => e.id !== workoutExercise.exercise.id));
       setError('Failed to remove exercise');
     }
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = async (event: any) => {
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
       const oldIndex = workoutExercises.findIndex(we => we.id === active.id);
       const newIndex = workoutExercises.findIndex(we => we.id === over.id);
+      
       const newOrder = arrayMove(workoutExercises, oldIndex, newIndex);
       setWorkoutExercises(newOrder);
 
@@ -129,7 +141,7 @@ export default function EditWorkoutModal({ workout, onSuccess, onCancel }: EditW
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-black rounded-xl w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-black rounded-xl w-full max-w-2xl shadow-xl">
         <div className="p-6 border-b border-gray-100 dark:border-gray-900">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Workout</h2>
@@ -144,7 +156,7 @@ export default function EditWorkoutModal({ workout, onSuccess, onCancel }: EditW
           </div>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -207,7 +219,7 @@ export default function EditWorkoutModal({ workout, onSuccess, onCancel }: EditW
                       items={workoutExercises}
                       strategy={verticalListSortingStrategy}
                     >
-                      {workoutExercises.map((workoutExercise) => (
+                      {workoutExercises.map(workoutExercise => (
                         <SortableExercise
                           key={workoutExercise.id}
                           id={workoutExercise.id}
@@ -222,30 +234,28 @@ export default function EditWorkoutModal({ workout, onSuccess, onCancel }: EditW
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+              <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
                 {error}
               </div>
             )}
-          </form>
-        </div>
 
-        <div className="p-6 border-t border-gray-100 dark:border-gray-900">
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white dark:text-black bg-black dark:bg-white rounded-lg hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white dark:text-black bg-black dark:bg-white rounded-lg hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

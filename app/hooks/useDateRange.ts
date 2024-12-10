@@ -9,7 +9,7 @@ export interface DateRange {
 
 export function useDateRange(initialRange?: Partial<DateRange>) {
   const [dateRange, setDateRange] = useState<DateRange>({
-    startDate: initialRange?.startDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    startDate: initialRange?.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     endDate: initialRange?.endDate || new Date()
   });
 

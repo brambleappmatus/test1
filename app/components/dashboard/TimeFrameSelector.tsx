@@ -26,6 +26,13 @@ export default function TimeFrameSelector({ onTimeFrameChange }: TimeFrameSelect
 
   const periodOptions: PeriodOption[] = [
     {
+      label: 'All Data',
+      getRange: () => ({
+        startDate: new Date(0), // Will be adjusted to first available data point
+        endDate: new Date()
+      })
+    },
+    {
       label: 'This Week',
       getRange: () => ({
         startDate: startOfWeek(new Date(), { weekStartsOn: 1 }),

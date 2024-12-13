@@ -15,11 +15,13 @@ export default function SaveButton({
     <button
       onClick={onClick}
       disabled={isLoading}
-      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-        isSaved
+      className={`
+        px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-medium transition-all duration-200
+        ${isSaved
           ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
           : 'bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90'
-      }`}
+        }
+      `}
     >
       {isLoading ? (
         <span className="flex items-center">

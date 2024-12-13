@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import type { WorkoutExercise } from '@/app/types/database';
 
 export async function getWorkoutExercises(workoutId: string): Promise<WorkoutExercise[]> {
+  // First get the workout exercises
   const { data: workoutExercises, error: exercisesError } = await supabase
     .from('workout_exercises')
     .select(`
@@ -12,7 +13,7 @@ export async function getWorkoutExercises(workoutId: string): Promise<WorkoutExe
     .order('order_index', { ascending: true });
 
   if (exercisesError) {
-    throw new Error(exercisesError.message);
+    throw Error(exercisesError.message);
   }
 
   // For each exercise, get the most recent archived workout data
@@ -58,6 +59,7 @@ export async function addExerciseToWorkout(workoutExercise: Omit<WorkoutExercise
     ? (currentExercises[0].order_index || 0) + 1 
     : 0;
 
+  // Add the new exercise
   const { data, error } = await supabase
     .from('workout_exercises')
     .insert([{ ...workoutExercise, order_index: nextOrderIndex }])
@@ -68,7 +70,27 @@ export async function addExerciseToWorkout(workoutExercise: Omit<WorkoutExercise
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    throw Error(error.message);
+  }
+
+  // Get the most recent history for this exercise
+  const { data: historicData } = await supabase
+    .from('workout_exercises')
+    .select(`
+      weight,
+      created_at
+    `)
+    .eq('exercise_id', workoutExercise.exercise_id)
+    .is('archived_workout_id', 'not.null')
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (historicData && historicData.length > 0) {
+    return {
+      ...data,
+      previous_weight: historicData[0].weight,
+      last_used_at: historicData[0].created_at
+    };
   }
 
   return data;
@@ -89,7 +111,7 @@ export async function updateWorkoutExercise(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    throw Error(error.message);
   }
 
   return data;
@@ -113,7 +135,7 @@ export async function updateExercisesOrder(
       .eq('id', update.id);
 
     if (error) {
-      throw new Error(`Failed to update order for exercise ${update.id}: ${error.message}`);
+      throw Error(`Failed to update order for exercise ${update.id}: ${error.message}`);
     }
   }
 }
@@ -125,7 +147,7 @@ export async function removeExerciseFromWorkout(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    throw new Error(error.message);
+    throw Error(error.message);
   }
 
   // After removing, reorder remaining exercises to ensure no gaps
@@ -135,7 +157,7 @@ export async function removeExerciseFromWorkout(id: string): Promise<void> {
     .order('order_index', { ascending: true });
 
   if (fetchError) {
-    throw new Error(`Failed to fetch remaining exercises: ${fetchError.message}`);
+    throw Error(`Failed to fetch remaining exercises: ${fetchError.message}`);
   }
 
   // Update order indices

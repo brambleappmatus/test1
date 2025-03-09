@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background: #ffffff;
+  --dark-background: #111111;
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background: var(--dark-background);
+}
+
+/* Add safe area insets support */
+body {
+  color: rgb(var(--foreground-rgb));
+  background: var(--background);
+  transition: background-color 0.3s ease-in-out;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Fix iOS 100vh issue */
+html {
+  height: -webkit-fill-available;
+}
+
+/* iOS status bar background */
+@supports (-webkit-touch-callout: none) {
+  .fixed {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Date Picker Custom Styles */
+.react-datepicker {
+  @apply bg-white dark:bg-[#111111] border border-gray-200 dark:border-gray-800 rounded-md font-sans shadow-lg !important;
+}
+
+.react-datepicker__header {
+  @apply bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 rounded-t-md !important;
+}
+
+.react-datepicker__current-month {
+  @apply font-semibold text-gray-900 dark:text-white !important;
+}
+
+.react-datepicker__day-name {
+  @apply text-gray-600 dark:text-gray-400 !important;
+}
+
+.react-datepicker__day {
+  @apply rounded-sm text-gray-900 dark:text-white transition-colors !important;
+}
+
+.react-datepicker__day:hover {
+  @apply bg-gray-100 dark:bg-gray-800 !important;
+}
+
+.react-datepicker__day--selected {
+  @apply bg-black dark:bg-white text-white dark:text-black !important;
+}
+
+.react-datepicker__day--selected:hover {
+  @apply bg-black/90 dark:bg-white/90 !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  @apply bg-black/10 dark:bg-white/10 text-black dark:text-white !important;
+}
+
+.react-datepicker__day--keyboard-selected:hover {
+  @apply bg-black/20 dark:bg-white/20 !important;
+}
+
+.react-datepicker__day--in-range {
+  @apply bg-black/5 dark:bg-white/5 text-black dark:text-white !important;
+}
+
+.react-datepicker__day--in-selecting-range {
+  @apply bg-black/10 dark:bg-white/10 !important;
+}
+
+.react-datepicker__day--disabled {
+  @apply text-gray-400 dark:text-gray-600 cursor-not-allowed !important;
+}
+
+.react-datepicker__day--disabled:hover {
+  @apply bg-transparent !important;
+}
+
+.react-datepicker__navigation {
+  @apply top-3 !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  @apply border-gray-400 dark:border-gray-500 !important;
+}
+
+.react-datepicker__time-container {
+  @apply border-l border-gray-200 dark:border-gray-800 !important;
+}
+
+.react-datepicker__time-list {
+  @apply bg-white dark:bg-[#111111] !important;
+}
+
+.react-datepicker__time-list-item {
+  @apply text-gray-900 dark:text-white transition-colors !important;
+}
+
+.react-datepicker__time-list-item:hover {
+  @apply bg-gray-100 dark:bg-gray-800 !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  @apply bg-black dark:bg-white text-white dark:text-black !important;
+}
+
+.react-datepicker__time-list-item--selected:hover {
+  @apply bg-black/90 dark:bg-white/90 !important;
+}
+
+.react-datepicker-time__header {
+  @apply text-gray-900 dark:text-white !important;
+}
+
+.react-datepicker__input-container input {
+  @apply w-full px-3 py-2 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-md text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors ring-offset-white dark:ring-offset-black focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent !important;
+}
+
+.react-datepicker-popper {
+  @apply z-50 !important;
+}
+
+/* Utility Classes */
+.btn-primary {
+  @apply bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors;
+}
+
+.card {
+  @apply bg-white dark:bg-[#111111] border border-gray-200 dark:border-gray-800 rounded-md;
+}
+
+.input {
+  @apply bg-white dark:bg-[#111111] border border-gray-200 dark:border-gray-800 rounded-md text-gray-900 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-colors;
+}
